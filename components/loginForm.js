@@ -1,35 +1,33 @@
 import React, {Components} from 'react';
 import {Text, View, StyleSheet, Button} from 'react-native';
+//import Register from './register.js';
+import { connect } from 'react-redux';
+import { emailChanged , passwordChanged, loginUser } from '../actions/index.js';
 import firebase from '@firebase/app';
 import '@firebase/auth';
 
-import { Input } from './input.js';
+
+import { Input } from './common/input.js'
 
 class LoginForm extends React.Component{
-state ={
-  email : '',
-  password : '',
-  error : ''
-};
 
 onButtonClicked(){
-this.setState({error : ''});
 
-  const {email , password} = this.state;
-  
-firebase.auth().signInWithEmailAndPassword(email, password)
-  .then(() => { this.setState({error : ''}); })
-  .catch(() => {
-    firebase.auth().createUserWithEmailAndPassword(email,password)
-    .then(() => { this.setState({error:''});})
-    .catch(()=>{
-      this.setState({error: 'giris basarısız'});
-    });
-  });
+
+const {email , password} = this.props;
+
+this.props.loginUser(email, password);
+}
+
+onEmailChanged(text){
+  this.props.emailChanged(text);
+}
+onPasswordChanged(text){
+  this.props.passwordChanged(text);
 }
 
   render(){
-    const {error} = this.state;
+    const {error} = this.props;
     const errorMsg = error ? (
       <Text style = {styles.errorStyle}>
         {error}
@@ -42,23 +40,15 @@ firebase.auth().signInWithEmailAndPassword(email, password)
 
       <View>
         <Input text='Email' inputPlaceHolder='Enter Email'
-            onChangeText={(text) => {
-              this.setState({
-                email:text
-              })
-            }}
-            value={this.state.email}
+            onChangeText={this.onEmailChanged.bind(this)}
+            value={this.props.email}
          />
       </View>
 
       <View>
       <Input text='Password' inputPlaceHolder='Enter Password'
-          onChangeText={(text) => {
-            this.setState({
-              password:text
-            })
-          }}
-          value={this.state.password}
+          onChangeText={this.onPasswordChanged.bind(this)}
+          value={this.props.password}
           />
       </View>
       {errorMsg}
@@ -76,6 +66,14 @@ const styles = StyleSheet.create({
     marginTop:20,
     backgroundColor:'#fff'
   }
-})
+});
 
-export default LoginForm;
+const mapStateToProps = state => {
+  const {email, password,error} = state.login;
+  return{
+    email,  password, error
+  }
+}
+
+export default connect(mapStateToProps, {emailChanged,
+   passwordChanged, loginUser})(LoginForm);
